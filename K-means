@@ -1,0 +1,64 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.metrics import silhouette_score, davies_bouldin_score
+
+# Read your dataset
+df = pd.read_csv('subset_cyber_attacks.csv')
+
+# Select the columns you want to use for clustering
+# In this example, I'm using numerical attributes (you can adjust this based on your specific attributes)
+attributes = ["Packet Length", "Anomaly Scores"]
+
+#"Source Port", "Destination Port",
+
+# Create subplots for all attack types
+attack_types = ["Malware", "DDoS", "Intrusion"]
+num_rows = len(attack_types)
+fig, axes = plt.subplots(num_rows, 1, figsize=(8, 3 * num_rows))  # Reduced subplot height to 3
+
+for i, attack_type in enumerate(attack_types):
+    attack_data = df[df[f'Attack Type_{attack_type}'] == True]
+
+    # Extract the selected attributes
+    data = attack_data[attributes]
+
+    # Apply K-Means clustering
+    k = 3  # The number of clusters (you can adjust this)
+    kmeans = KMeans(n_clusters=k, random_state=0)
+    attack_data['Cluster'] = kmeans.fit_predict(data)
+
+    # Visualize the clusters using PCA (for 2D visualization)
+    pca = PCA(n_components=2)
+    data_pca = pca.fit_transform(data)
+    attack_data['PCA1'] = data_pca[:, 0]
+    attack_data['PCA2'] = data_pca[:, 1]
+
+    # Create a scatterplot to visualize the clusters
+    for cluster in attack_data['Cluster'].unique():
+        axes[i].scatter(attack_data[attack_data['Cluster'] == cluster]['PCA1'],
+                        attack_data[attack_data['Cluster'] == cluster]['PCA2'],
+                        label=f'Cluster {cluster}',
+                        alpha=0.4
+                    )
+    axes[i].set_title(f'K-Means Clustering for {attack_type}')
+    axes[i].set_xlabel('PCA1')
+    axes[i].set_ylabel('PCA2')
+    axes[i].legend()
+
+    silhouette = silhouette_score(data, kmeans.labels_)
+    davies_bouldin = davies_bouldin_score(data, kmeans.labels_)
+
+    print(f"Silhouette Score for {attack_type}: {silhouette}")
+    print(f"Davies-Bouldin Index for {attack_type}: {davies_bouldin}")
+    print("Cluster Centroids:")
+    print(kmeans.cluster_centers_)
+    print("Cluster Assignments:")
+    print(kmeans.labels_)
+
+# Display all plots at once
+plt.tight_layout()
+plt.show()
+
+# Adjust spacing between subplots
