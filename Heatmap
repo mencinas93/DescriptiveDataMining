@@ -1,0 +1,34 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Read your dataset
+df = pd.read_csv('subset_cyber_attacks.csv')
+
+# Boolean attributes
+boolean_attributes = [
+    'Protocol_ICMP', 'Protocol_TCP', 'Protocol_UDP',
+    'Packet Type_Control', 'Packet Type_Data',
+    'Traffic Type_DNS', 'Traffic Type_FTP', 'Traffic Type_HTTP',
+    'Malware Indicators_IoC Detected', 'Malware Indicators_Not Detected',
+    'Alerts/Warnings_Alert Triggered', 'Alerts/Warnings_Not Triggered',
+    'Attack Type_DDoS', 'Attack Type_Intrusion', 'Attack Type_Malware',
+    'Attack Signature_Known Pattern A', 'Attack Signature_Known Pattern B',
+    'Action Taken_Blocked', 'Action Taken_Ignored', 'Action Taken_Logged',
+    'Severity Level_High', 'Severity Level_Low', 'Severity Level_Medium'
+]
+
+# Filter data for each attack type
+attack_types = ["Malware", "DDoS", "Intrusion"]
+
+for attack_type in attack_types:
+    attack_data = df[df[f'Attack Type_{attack_type}'] == True]
+
+    # Calculate the correlation matrix
+    correlation_matrix = attack_data[boolean_attributes].corr()
+
+    # Create a heatmap
+    plt.figure(figsize=(15, 10))
+    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
+    plt.title(f'Correlation Heatmap for {attack_type}')
+    plt.show()
