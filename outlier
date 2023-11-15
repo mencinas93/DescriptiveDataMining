@@ -1,0 +1,51 @@
+import pandas as pd
+from sklearn.ensemble import IsolationForest
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Read your dataset
+df = pd.read_csv('subset_cyber_attacks.csv')
+
+# Select relevant attributes
+attributes = ["Anomaly Scores", "Packet Length"]
+
+# Create subplots for all attack types
+attack_types = ["Malware", "DDoS", "Intrusion"]
+
+for attack_type in attack_types:
+    # Filter data for the specific attack type
+    attack_data = df[df[f'Attack Type_{attack_type}'] == True]
+
+    # Extract the selected attributes
+    data = attack_data[attributes]
+
+    # Apply Isolation Forest for outlier detection
+    isolation_forest = IsolationForest(contamination=0.2, random_state=0)
+    attack_data['Outlier'] = isolation_forest.fit_predict(data)
+
+    # Count outliers and non-outliers for the specific attack type
+    outlier_count = (attack_data['Outlier'] == -1).sum()
+    non_outlier_count = (attack_data['Outlier'] == 1).sum()
+
+    print(f"Summary for {attack_type}:")
+    print(f"Outliers: {outlier_count}, Non-Outliers: {non_outlier_count}\n")
+
+    # Print detailed information if there are outliers
+    if outlier_count > 0:
+        print("Outliers:")
+        print(attack_data[attack_data['Outlier'] == -1][['Anomaly Scores', 'Packet Length']])
+        print("\n")
+
+    # Print detailed information if there are non-outliers
+    if non_outlier_count > 0:
+        print("Non-Outliers:")
+        print(attack_data[attack_data['Outlier'] == 1][['Anomaly Scores', 'Packet Length']])
+        print("\n")
+
+    # Scatter plot for visualization
+    sns.scatterplot(x='Anomaly Scores', y='Packet Length', data=attack_data, hue='Outlier')
+    plt.title(f'Outliers and Non-Outliers for {attack_type}')
+    plt.xlabel('Anomaly Scores')
+    plt.ylabel('Packet Length')
+    plt.legend()
+    plt.show()
