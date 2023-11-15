@@ -1,0 +1,46 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Read your dataset
+df = pd.read_csv('subset_cyber_attacks.csv')
+
+# Boolean attributes
+boolean_attributes = [
+    'Protocol_ICMP', 'Protocol_TCP', 'Protocol_UDP',
+    'Packet Type_Control', 'Packet Type_Data',
+    'Traffic Type_DNS', 'Traffic Type_FTP', 'Traffic Type_HTTP',
+    'Malware Indicators_IoC Detected', 'Malware Indicators_Not Detected',
+    'Alerts/Warnings_Alert Triggered', 'Alerts/Warnings_Not Triggered',
+    'Attack Type_DDoS', 'Attack Type_Intrusion', 'Attack Type_Malware',
+    'Attack Signature_Known Pattern A', 'Attack Signature_Known Pattern B',
+    'Action Taken_Blocked', 'Action Taken_Ignored', 'Action Taken_Logged',
+    'Severity Level_High', 'Severity Level_Low', 'Severity Level_Medium'
+]
+
+# Filter data for each attack type
+attack_types = ["Malware", "DDoS", "Intrusion"]
+
+for attack_type in attack_types:
+    attack_data = df[df[f'Attack Type_{attack_type}'] == True]
+
+    # Calculate prevalence of boolean attributes
+    boolean_prevalence = attack_data[boolean_attributes].mean()
+
+    # Get counts for each attribute
+    attribute_counts = attack_data[boolean_attributes].sum()
+
+    # Create a bar plot
+    plt.figure(figsize=(15, 8))
+    ax = sns.barplot(x=boolean_prevalence.index, y=boolean_prevalence.values, palette="viridis")
+    
+    # Display counts on each bar
+    for i, v in enumerate(attribute_counts):
+        ax.text(i, v + 0.02, str(v), ha='center', va='bottom', fontsize=8)
+
+    plt.title(f'Prevalence of Boolean Attributes for {attack_type}')
+    plt.xlabel('Boolean Attributes')
+    plt.ylabel('Prevalence')
+    plt.xticks(rotation=45, ha='right',  fontsize=6)
+    plt.tight_layout()
+    plt.show()
